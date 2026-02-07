@@ -88,6 +88,86 @@ const App : React.FC = () => {
     );
   };
 
+  // Drawing function 1: Recursive tree
+
+  const drawTree = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    
+    //Clear the canvas with a dark background
+    ctx.fillStyle = '#0a0a15';
+    ctx.fillRect(0, 0, width, height); 
+
+    // start position: bottom center of canvas
+    const startX = width / 2; 
+    const startY = height - 50; 
+
+    // Initial trunk length: proportional to canvas height
+    const initialLength = height / 4; 
+
+    // Recursive function
+    const drawBranch = (
+      x: number, 
+      y: number, 
+      length: number, 
+      angle: number, 
+      depth: number, 
+      thickness: number
+    ) => {
+      //Calculate endpoint using trigonometry
+      const endX = x + length * Math.cos(angle); //Horizontal component
+      const endY = y - length * Math.sin(angle); // Vertical component 
+
+      // Calculating the color via hue
+      if (useRainbow) {
+        const hue = baseHue + (depth / treeParams.depth) * 120; 
+        const lightness = 50 + depth * 2; //Get brighter toward tips
+        ctx.strokeStyle = `hsl(${hue}, 70%, ${lightness}%)`; 
+      } else {
+        const lightness = 30 + (depth / treeParams.depth) * 50; 
+        ctx.strokeStyle = `hsl(${baseHue}, 60%, ${lightness}%)`;
+      }
+
+      // Draw the branch
+      ctx.lineWidth = thickness; 
+      ctx.lineCap = 'round';  // rounded ends me natural
+      ctx.beginPath(); 
+      ctx.moveTo(x, y); 
+      ctx.lineTo(endX, endY); 
+      ctx.stroke(); 
+
+      // Add a subtle glow effect for branches 
+      if (depth > treeParams.depth - 3) {
+        ctx.shadowBlur = 10; 
+        ctx.shadowColor = ctx.strokeStyle; 
+        ctx.stroke(); 
+        ctx.shadowBlur = 0; // Reset shadow
+      }
+
+      // Base case 
+      if (depth <= 0) return; 
+
+      // Recursive case 
+      const newLength = length * treeParams.lengthRatio; 
+      const newThickness = thickness * 0.7; //Branches get thinner
+      const angleStep = (treeParams.branchAngle * Math.PI) / 180; 
+
+      //Calculates the angles for multiple branches 
+      // If branches = 2: one left, one right
+      // IF branches = 3: left, center, right; etc...
+
+      for (let i = 0; i < treeParams.branches; i++){
+        //spread branches evenly around the current angle
+        const offset = angleStep * (i - (treeParams.branches - 1) / 2); 
+        const newAngle = angle + offset; 
+
+        // Here's the recursion 
+        drawBranch(endX, endY, newLength, newAngle, depth - 1, newThickness); 
+      }
+    }; 
+
+    //Recursion starts here 
+    drawBranch(startX, startY, initialLength, Math.Pi / 2, treeParams.depth, treeParams.thickness); 
+  }; 
+
 
   return (
     <div>App</div>

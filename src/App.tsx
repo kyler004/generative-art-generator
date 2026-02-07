@@ -165,9 +165,24 @@ const App : React.FC = () => {
     }; 
 
     //Recursion starts here 
-    drawBranch(startX, startY, initialLength, Math.Pi / 2, treeParams.depth, treeParams.thickness); 
+    drawBranch(startX, startY, initialLength, Math.PI / 2, treeParams.depth, treeParams.thickness); 
   }; 
 
+  // Drawing the spirograph
+
+  const drawSpirograph = (ctx: CanvasRenderingContext2D, width: number, height: number) =>{
+    ctx.fillStyle = "#0a0a15";
+    ctx.fillRect(0, 0, width, height); 
+
+    //Center of canvas 
+    const centerX = width / 2; 
+    const centerY = height / 2; 
+
+    const { outerRadius, innerRadius, offset, iterations } = spiroParams; 
+
+    //Here"'s where we continue
+
+  }
 
   return (
     <div>App</div>

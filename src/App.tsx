@@ -187,15 +187,18 @@ const App: React.FC = () => {
     ctx.fillStyle = "#0a0a15";
     ctx.fillRect(0, 0, width, height);
 
-    //Center of canvas
+    // Center of canvas
     const centerX = width / 2;
     const centerY = height / 2;
 
     const { outerRadius, innerRadius, offset, iterations } = spiroParams;
 
-    //Here"'s where we continue
+    ctx.save(); // Save canvas state for alpha blending
+    ctx.globalAlpha = 0.7; // Add alpha blending for softer look
+
     ctx.beginPath();
 
+    // Smooth color transitions: interpolate hue from baseHue to baseHue+360
     for (let i = 0; i <= iterations; i++) {
       const t = (i / iterations) * Math.PI * 20;
 
@@ -206,15 +209,17 @@ const App: React.FC = () => {
       const y =
         centerY +
         (outerRadius - innerRadius) * Math.sin(t) -
-        offset * Math.sint(((outerRadius - innerRadius) / innerRadius) * t);
+        offset * Math.sin(((outerRadius - innerRadius) / innerRadius) * t);
 
-      // color changes along the path
+      // Smooth color transitions using HSL and alpha blending
+      let hue;
       if (useRainbow) {
-        const hue = (baseHue + (i / iterations) * 360) % 360;
-        ctx.strokeStyle = `hsl(${hue}, 70%, 60%)`;
+        // Interpolate hue smoothly
+        hue = baseHue + (i / iterations) * 360;
       } else {
-        ctx.strokeStyle = `hsl(${baseHue}, 60%, 60%)`;
+        hue = baseHue;
       }
+      ctx.strokeStyle = `hsla(${hue % 360}, 70%, 60%, 0.8)`; // Use alpha in color
 
       if (i === 0) {
         ctx.moveTo(x, y);
@@ -227,11 +232,33 @@ const App: React.FC = () => {
     ctx.lineCap = "round";
     ctx.stroke();
 
-    // Add glow effect
+    ctx.restore(); // Restore canvas state
+
+    // Add glow effect (optional, can be further styled)
+    ctx.save();
     ctx.shadowBlur = 15;
     ctx.shadowColor = `hsl(${baseHue}, 70%, 60%)`;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    for (let i = 0; i <= iterations; i++) {
+      const t = (i / iterations) * Math.PI * 20;
+      const x =
+        centerX +
+        (outerRadius - innerRadius) * Math.cos(t) +
+        offset * Math.cos(((outerRadius - innerRadius) / innerRadius) * t);
+      const y =
+        centerY +
+        (outerRadius - innerRadius) * Math.sin(t) -
+        offset * Math.sin(((outerRadius - innerRadius) / innerRadius) * t);
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.shadowBlur = 0;
+    ctx.restore();
   };
 
   // Drawing the flow field
@@ -288,8 +315,7 @@ const App: React.FC = () => {
         ctx.strokeStyle = `hsla(${baseHue}, 60%, 60%, ${alpha})`;
       }
 
-      ctx;
-      lineWidth = 1;
+      ctx.lineWidth = 1;
       ctx.stroke();
     }
   };
@@ -368,11 +394,11 @@ const App: React.FC = () => {
   }, [isAnimating]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-8">
+    <div className="min-h-screen bg-linear-to-br from-cyan-900 via-slate-900 to-gray-900 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 mb-2">
+          <h1 className="text-6xl font-bold text-transparent bg-clip-text bg-linear-to-r from-cyan-400 via-purple-400 to-pink-400 mb-2">
             Generative Art Studio
           </h1>
           <p className="text-cyan-300 text-lg">
@@ -406,7 +432,7 @@ const App: React.FC = () => {
                     onClick={() => setPattern(p)}
                     className={`w-full px-4 py-3 rounded-lg font-semibold transition-all ${
                       pattern === p
-                        ? "bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg scale-105"
+                        ? "bg-linear-to-r from-cyan-500 to-purple-500 text-white shadow-lg scale-105"
                         : "bg-gray-700/50 text-gray-300 hover:bg-gray-700"
                     }`}
                   >
@@ -427,8 +453,8 @@ const App: React.FC = () => {
                   onClick={() => setIsAnimating(!isAnimating)}
                   className={`w-full px-4 py-3 rounded-lg font-semibold transition-all ${
                     isAnimating
-                      ? "bg-gradient-to-r from-red-500 to-orange-500"
-                      : "bg-gradient-to-r from-green-500 to-emerald-500"
+                      ? "bg-linear-to-r from-red-500 to-orange-500"
+                      : "bg-linear-to-r from-green-500 to-emerald-500"
                   } text-white shadow-lg`}
                 >
                   {isAnimating ? "⏸️ Stop Animation" : "▶️ Animate"}
@@ -438,7 +464,7 @@ const App: React.FC = () => {
                   onClick={() => setUseRainbow(!useRainbow)}
                   className={`w-full px-4 py-3 rounded-lg font-semibold transition-all ${
                     useRainbow
-                      ? "bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500"
+                      ? "bg-linear-to-r from-pink-500 via-purple-500 to-cyan-500"
                       : "bg-gray-700"
                   } text-white shadow-lg`}
                 >
@@ -757,7 +783,7 @@ const App: React.FC = () => {
             )}
 
             {/* Info Panel */}
-            <div className="bg-gradient-to-br from-cyan-900/30 to-purple-900/30 backdrop-blur rounded-xl p-6 shadow-xl border border-cyan-500/20">
+            <div className="bg-linear-to-br from-cyan-900/30 to-purple-900/30 backdrop-blur rounded-xl p-6 shadow-xl border border-cyan-500/20">
               <h3 className="text-lg font-bold text-cyan-300 mb-2">💡 Tips</h3>
               <ul className="text-cyan-200/80 text-sm space-y-1">
                 {pattern === "tree" && (

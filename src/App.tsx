@@ -181,8 +181,43 @@ const App : React.FC = () => {
     const { outerRadius, innerRadius, offset, iterations } = spiroParams; 
 
     //Here"'s where we continue
+    ctx.beginPath(); 
 
-  }
+    for (let i = 0; i <= iterations; i++) {
+      const t = (i / iterations) * Math.PI * 20; 
+
+      const x = centerX + (outerRadius - innerRadius) * Math.cos(t) + offset * Math.cos(((outerRadius - innerRadius) / innerRadius) * t); 
+      const y = centerY + (outerRadius - innerRadius) * Math.sin(t) - offset * Math.sint(((outerRadius - innerRadius) / innerRadius) * t); 
+
+      // color changes along the path
+      if (useRainbow) {
+        const hue = (baseHue + (i / iterations) * 360) % 360; 
+        ctx.strokeStyle = `hsl(${hue}, 70%, 60%)`; 
+      } else {
+        ctx.strokeStyle = `hsl(${baseHue}, 60%, 60%)`;
+      }
+
+      if (i === 0) {
+        ctx.moveTo(x, y); 
+      } else {
+        ctx.lineTo(x, y); 
+      }
+    }
+
+    ctx.lineWidth = 2; 
+    ctx.lineCap = 'round'; 
+    ctx.stroke(); 
+
+    // Add glow effect
+    ctx.shadowBlur = 15; 
+    ctx.shadowColor = `hsl(${baseHue}, 70%, 60%)`; 
+    ctx.stroke(); 
+    ctx.shadowBlur = 0; 
+  }; 
+
+  // Drawing the flow field
+
+  const draw
 
   return (
     <div>App</div>

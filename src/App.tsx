@@ -268,55 +268,55 @@ const App: React.FC = () => {
     width: number,
     height: number,
   ) => {
+    // Fade overlay for trail effect
+    ctx.save();
+    ctx.globalAlpha = 0.15;
     ctx.fillStyle = "#0a0a15";
     ctx.fillRect(0, 0, width, height);
+    ctx.restore();
 
     const { particles, steps, noiseScale, flowStrength, alpha } = flowParams;
 
-    // ========================================
-    // Flow Field Concept
-    // ========================================
-    // 1. Create invisible "force field" using noise
-    // 2. Place particles randomly
-    // 3. Each particle moves following the force direction at its position
-    // 4. This creates organic, flowing curves
-
-    // drawing multiple particles (flowing lines)
     for (let p = 0; p < particles; p++) {
-      //Random starting position
       let x = Math.random() * width;
       let y = Math.random() * height;
 
+      ctx.save();
       ctx.beginPath();
       ctx.moveTo(x, y);
 
-      //Each particle dras a line segment
       for (let i = 0; i < steps; i++) {
         const noiseValue = noise(x * noiseScale, y * noiseScale);
+        const angle = noiseValue * Math.PI * 4;
 
-        const angle = noiseValue * Math.PI * 4; // Converting the noise to an angle
-        x += Math.cos(angle) * flowStrength; // Move particle in that direction
-        y += Math.sin(angle) * flowStrength;
+        // Add random jitter for organic motion
+        const jitter = (Math.random() - 0.5) * 0.5;
+        x += Math.cos(angle + jitter) * flowStrength;
+        y += Math.sin(angle + jitter) * flowStrength;
 
-        // Wrap around edges( toroidal topology)
+        // Wrap around edges
         if (x < 0) x = width;
         if (x > width) x = 0;
         if (y < 0) y = height;
         if (y > height) y = 0;
 
         ctx.lineTo(x, y);
-      }
 
-      //Color based on starting position (if rainbow color mode is selected)
-      if (useRainbow) {
-        const hue = (baseHue + (p / particles) * 360) % 360;
+        // Dynamic color transitions: interpolate hue along the path
+        let hue;
+        if (useRainbow) {
+          hue = (baseHue + (i / steps) * 360) % 360;
+        } else {
+          hue = baseHue;
+        }
         ctx.strokeStyle = `hsla(${hue}, 70%, 60%, ${alpha})`;
-      } else {
-        ctx.strokeStyle = `hsla(${baseHue}, 60%, 60%, ${alpha})`;
+        ctx.lineWidth = 1.2;
+        ctx.globalAlpha = alpha;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
       }
-
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      ctx.restore();
     }
   };
 

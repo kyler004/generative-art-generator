@@ -68,7 +68,7 @@ const App : React.FC = () => {
   })
 
   //Flow Field Parameters
-  const [flowParams, setFlowPrams] = useState<FlowParams>({
+  const [flowParams, setFlowParams] = useState<FlowParams>({
     particles: 100, 
     steps: 100, 
     noiseScale: 0.01, 
@@ -217,7 +217,89 @@ const App : React.FC = () => {
 
   // Drawing the flow field
 
-  const draw
+  const drawFlowField = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    ctx.fillStyle = '#0a0a15'; 
+    ctx.fillRect(0, 0, width, height); 
+
+    const { particles, steps, noiseScale, flowStrength, alpha } = flowParams
+    
+    // ========================================
+    // Flow Field Concept
+    // ========================================
+    // 1. Create invisible "force field" using noise
+    // 2. Place particles randomly
+    // 3. Each particle moves following the force direction at its position
+    // 4. This creates organic, flowing curves
+
+    // drawing multiple particles (flowing lines)
+    for (let p = 0; p < particles; p++) {
+      //Random starting position
+      let x = Math.random() * width; 
+      let y = Math.random() * height; 
+
+      ctx.beginPath();
+      ctx.moveTo(x, y); 
+
+      //Each particle dras a line segment
+      for (let i = 0; i < steps; i++) {
+        const noiseValue = noise(x * noiseScale, y * noiseScale); 
+
+        const angle = noiseValue * Math.PI * 4; // Converting the noise to an angle
+        x += Math.cos(angle) * flowStrength; // Move particle in that direction
+        y += Math.sin(angle) * flowStrength;
+        
+        // Wrap around edges( toroidal topology)
+        if (x < 0) x = width; 
+        if (x > width) x = 0; 
+        if (y < 0) y = height; 
+        if (y > height) y = 0;
+        
+        ctx.lineTo(x,y); 
+        
+      }
+
+      //Color based on starting position (if rainbow color mode is selected)
+      if (useRainbow) {
+        const hue = (baseHue + (p / particles) * 360) % 360; 
+        ctx.strokeStyle = `hsla(${hue}, 70%, 60%, ${alpha})`;
+      } else {
+        ctx.strokeStyle = `hsla(${baseHue}, 60%, 60%, ${alpha})`; 
+      }
+
+      ctx;lineWidth = 1; 
+      ctx.stroke(); 
+    }
+  }; 
+
+  // Animation Loop
+   const animate = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Update animation progress
+    setAnimationProgress((prev) => (prev + 0.01) % 1);
+
+    // Modify parameters based on animation progress
+    if (pattern === 'tree') {
+      // Animate branch angle - creates breathing effect
+      const animatedAngle = 25 + Math.sin(animationProgress * Math.PI * 2) * 10;
+      setTreeParams((prev) => ({ ...prev, branchAngle: animatedAngle }));
+    } else if (pattern === 'spirograph') {
+      // Rotate through different ratios
+      const animatedInner = 100 + Math.sin(animationProgress * Math.PI * 2) * 30;
+      setSpiroParams((prev) => ({ ...prev, innerRadius: animatedInner }));
+    } else if (pattern === 'flow') {
+      // Shift the noise field over time
+      const animatedScale = 0.01 + Math.sin(animationProgress * Math.PI * 2) * 0.005;
+      setFlowParams((prev) => ({ ...prev, noiseScale: animatedScale }));
+    }
+
+    // Continue animation loop
+    animationRef.current = requestAnimationFrame(animate);
+  };
 
   return (
     <div>App</div>
